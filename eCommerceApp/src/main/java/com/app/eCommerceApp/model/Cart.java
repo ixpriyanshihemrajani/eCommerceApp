@@ -36,7 +36,7 @@ public class Cart {
 
     @OneToOne(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     @JoinColumn(name = "USER_ID",referencedColumnName = "USER_ID")
-    private User user;
+    private UserInfo user;
 
     @ManyToMany(cascade = { CascadeType.ALL }, fetch = FetchType.LAZY)
     @JoinTable(
@@ -74,7 +74,7 @@ public class Cart {
 
 	
 
-	public Cart(Long id, double total, User user, Set<Product> products, HashSet<Order> orders) {
+	public Cart(Long id, double total, UserInfo user, Set<Product> products, HashSet<Order> orders) {
 		super();
 		this.id = id;
 		this.total = total;
@@ -104,12 +104,12 @@ public class Cart {
 	}
 
 
-	public User getUser() {
+	public UserInfo getUser() {
 		return user;
 	}
 
 
-	public void setUser(User user) {
+	public void setUser(UserInfo user) {
 		this.user = user;
 	}
 

@@ -6,22 +6,27 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UserDetails; 
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
+import org.springframework.security.core.userdetails.UsernameNotFoundException; 
+import org.springframework.security.crypto.password.PasswordEncoder; 
+
 
 import com.app.eCommerceApp.model.Cart;
 import com.app.eCommerceApp.model.Product;
-import com.app.eCommerceApp.model.User;
-import com.app.eCommerceApp.repository.UserRepository;
+import com.app.eCommerceApp.model.UserInfo;
+import com.app.eCommerceApp.repository.UserInfoRepository;
 import com.app.eCommerceApp.repository.CartRepository;
 import com.app.eCommerceApp.repository.ProductRepository;
 import com.app.eCommerceApp.response.ResponseMessage;
 
 
 @Service
-public class UserServiceImpl implements UserService {
+public class UserInfoService implements UserService, UserDetailsService {
 
     @Autowired
-    private UserRepository userRepository;
+    private UserInfoRepository userRepository;
     
     @Autowired
     private CartRepository cartRepository;
@@ -29,10 +34,13 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private ProductRepository productRepository;
     
+    @Autowired 
+    private PasswordEncoder encoder;
+    
     @Override
-    public ResponseEntity<?> createUser(User user) {
+    public ResponseEntity<?> createUser(UserInfo user) {
         try {
-            Optional<User> existingUser = userRepository.findByEmail(user.getEmail());
+            Optional<UserInfo> existingUser = userRepository.findByEmail(user.getEmail());
             if (existingUser.isPresent()) {
                 return new ResponseEntity<>(new ResponseMessage("User with email " + user.getEmail() + " already exists", HttpStatus.BAD_REQUEST.value()), HttpStatus.BAD_REQUEST);
             }
@@ -44,7 +52,9 @@ public class UserServiceImpl implements UserService {
                 cart.setUser(user);
             }
 
-            User createdUser = userRepository.save(user);
+            
+            user.setPassword(encoder.encode(user.getPassword()));
+            UserInfo createdUser = userRepository.save(user);
             return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
         } catch (Exception e) {
             return new ResponseEntity<>(new ResponseMessage("Error creating user: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR.value()), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -52,11 +62,10 @@ public class UserServiceImpl implements UserService {
     }
 
 
-
     @Override
-    public ResponseEntity<?> updateUser(Long userId, User user) {
+    public ResponseEntity<?> updateUser(Long userId, UserInfo user) {
         try {
-            Optional<User> optionalUser = userRepository.findById(userId);
+            Optional<UserInfo> optionalUser = userRepository.findById(userId);
             if (optionalUser.isPresent()) {
                 user.setId(userId);
                 userRepository.save(user);
@@ -68,6 +77,8 @@ public class UserServiceImpl implements UserService {
             return new ResponseEntity<>(new ResponseMessage("Error updating user: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR.value()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+    
+    
 
     @Override
     public ResponseEntity<?> deleteUser(Long userId) {
@@ -86,7 +97,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseEntity<?> getUserById(Long userId) {
         try {
-            Optional<User> optionalUser = userRepository.findById(userId);
+            Optional<UserInfo> optionalUser = userRepository.findById(userId);
             if (optionalUser.isPresent()) {
                 return new ResponseEntity<>(optionalUser.get(), HttpStatus.OK);
             } else {
@@ -100,7 +111,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseEntity<?> getAllUsers() {
         try {
-            List<User> users = userRepository.findAll();
+            List<UserInfo> users = userRepository.findAll();
             if (users.isEmpty()) {
                 return new ResponseEntity<>(new ResponseMessage("No users found", HttpStatus.NOT_FOUND.value()),HttpStatus.NOT_FOUND);
             }
@@ -113,11 +124,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseEntity<?> addProductToCart(Long userId, Long productId) {
         try {
-            Optional<User> optionalUser = userRepository.findById(userId);
+            Optional<UserInfo> optionalUser = userRepository.findById(userId);
             if (!optionalUser.isPresent()) {
                 return new ResponseEntity<>(new ResponseMessage("User not found", HttpStatus.NOT_FOUND.value()), HttpStatus.NOT_FOUND);
             }
-            User user = optionalUser.get();
+            UserInfo user = optionalUser.get();
 
             
             Product product = productRepository.findById(productId).orElse(null);
@@ -140,6 +151,28 @@ public class UserServiceImpl implements UserService {
         }
     }
     
-}
+    
+    
+    
+    
+    //JWT WORK
+    
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException { 
+  
+        Optional<UserInfo> userDetail = userRepository.findByUsername(username); 
+  
+        // Converting userDetail to UserDetails 
+        return userDetail.map(UserInfoDetails::new) 
+                .orElseThrow(() -> new UsernameNotFoundException("User not found " + username)); 
+    } 
+  
+    
+  
+} 
+    
+    
+    
+
 
 

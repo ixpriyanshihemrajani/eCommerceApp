@@ -18,7 +18,7 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "USER_TABLE")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-public class User {
+public class UserInfo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "USER_ID")
@@ -29,22 +29,25 @@ public class User {
     private String email;
     @Column(name = "PASSWORD")
     private String password;
+    @Column(name = "ROLES")
+    private String roles;
     
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private Cart cart;
 
-	public User() {
+	public UserInfo() {
 		super();
 		// TODO Auto-generated constructor stub
 	}
 
-	public User(Long id, String username, String email, String password, Cart cart) {
+	public UserInfo(Long id, String username, String email, String password, String roles, Cart cart) {
 		super();
 		this.id = id;
 		this.username = username;
 		this.email = email;
 		this.password = password;
+		this.roles = roles;
 		this.cart = cart;
 	}
 
@@ -80,6 +83,14 @@ public class User {
 		this.password = password;
 	}
 
+	public String getRoles() {
+		return roles;
+	}
+
+	public void setRoles(String roles) {
+		this.roles = roles;
+	}
+
 	public Cart getCart() {
 		return cart;
 	}
@@ -88,5 +99,6 @@ public class User {
 		this.cart = cart;
 	}
 
+	
 	
 }
